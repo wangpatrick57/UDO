@@ -39,7 +39,7 @@ from udo.drivers.mysqldriver import MysqlDriver
 from udo.drivers.postgresdriver import PostgresDriver
 
 if __name__ == "__main__":
-    logging.basicConfig(level=logging.INFO,
+    logging.basicConfig(level=logging.DEBUG,
                         format="%(asctime)s [%(funcName)s:%(lineno)03d] %(levelname)-5s: %(message)s",
                         datefmt="%m-%d-%Y %H:%M:%S",
                         stream=sys.stdout)

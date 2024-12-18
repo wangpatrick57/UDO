@@ -38,7 +38,7 @@ class PostgresDriver(AbstractDriver):
 
     def connect(self):
         """connect to a database"""
-        self.conn = psycopg2.connect("dbname='%s' user='%s'" % (self.config["db"], self.config["user"]))
+        self.conn = psycopg2.connect("host=localhost dbname='%s' user='%s' password='%s'" % (self.config["db"], self.config["user"], self.config["passwd"]))
         self.conn.autocommit = True
         self.cursor = self.conn.cursor()
         self.index_creation_format = "CREATE INDEX %s ON %s (%s);"
@@ -71,7 +71,7 @@ class PostgresDriver(AbstractDriver):
             try:
                 # logging.debug(f"query sql: {query_sql}")
                 logging.debug(f"current timeout: {current_timeout}")
-                self.cursor.execute("set statement_timeout = %d" % (current_timeout * 1000))
+                self._force_statement_timeout(current_timeout)
                 start_time = time.time()
                 self.cursor.execute(query_sql)
                 finish_time = time.time()
@@ -85,9 +85,18 @@ class PostgresDriver(AbstractDriver):
             logging.debug(f"duration: {duration}")
             run_time.append(duration)
         # reset the timeout to the default configuration
-        self.cursor.execute("set statement_timeout=0;")
+        self._force_statement_timeout(0)
         self.cursor.execute("drop view if exists REVENUE0;")
         return run_time
+
+    def _force_statement_timeout(self, timeout):
+        retry = True
+        while retry:
+            try:
+                self.cursor.execute(f"set statement_timeout = {timeout * 1000}")
+                retry = False
+            except:
+                pass
 
     def run_queries_with_total_timeout(self, query_list, timeout):
         """run queries with a timeout"""
